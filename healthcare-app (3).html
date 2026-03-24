@@ -1,0 +1,1452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedCare – Your Health Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  :root {
+    --primary: #1a6cf6;
+    --primary-dark: #0f4fc0;
+    --primary-light: #e8f0fe;
+    --accent: #00c9a7;
+    --accent-light: #e0faf5;
+    --danger: #f04545;
+    --warning: #f5a623;
+    --success: #27ae60;
+    --bg: #f4f7fb;
+    --card: #ffffff;
+    --text: #1a2236;
+    --muted: #7a8aaa;
+    --border: #e2e8f4;
+    --shadow: 0 2px 16px rgba(26,108,246,0.08);
+    --shadow-lg: 0 8px 40px rgba(26,108,246,0.14);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  .hidden { display: none !important; }
+
+  /* ── SPLASH ── */
+  #splash {
+    position: fixed; inset: 0; background: linear-gradient(135deg,#1a6cf6 0%,#0f4fc0 60%,#00c9a7 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;
+    animation: splashOut 0.5s ease 2.5s forwards;
+  }
+  @keyframes splashOut { to { opacity:0; pointer-events:none; } }
+  .splash-logo { font-size: 3.2rem; font-weight: 800; color: #fff; letter-spacing: -1px; }
+  .splash-logo span { color: #a8f0e0; }
+  .splash-sub { color: rgba(255,255,255,0.8); font-size: 1.05rem; margin-top: 8px; }
+  .splash-loader { margin-top: 40px; width: 48px; height: 4px; background: rgba(255,255,255,0.25); border-radius: 4px; overflow: hidden; }
+  .splash-loader::after { content:''; display:block; height:100%; width:40%; background:#fff; border-radius:4px; animation: load 2.2s ease infinite; }
+  @keyframes load { 0%{transform:translateX(-100%)} 100%{transform:translateX(350%)} }
+
+  /* ── SCREENS ── */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ── AUTH SCREEN ── */
+  #auth-screen {
+    background: linear-gradient(160deg, #e8f0fe 0%, #f4f7fb 50%, #e0faf5 100%);
+    flex-direction: column; align-items: center; justify-content: center; padding: 24px;
+  }
+  .auth-card {
+    background: #fff; border-radius: 24px; padding: 40px 36px; width: 100%; max-width: 440px;
+    box-shadow: 0 20px 60px rgba(26,108,246,0.14);
+  }
+  .auth-logo { font-size: 2rem; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+  .auth-logo span { color: var(--accent); }
+  .auth-tagline { color: var(--muted); font-size: 0.92rem; margin-bottom: 28px; }
+  .role-tabs { display: flex; gap: 8px; margin-bottom: 24px; }
+  .role-tab {
+    flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+    text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--muted);
+    transition: all 0.2s;
+  }
+  .role-tab.active { border-color: var(--primary); background: var(--primary-light); color: var(--primary); }
+  .form-label { font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%; padding: 13px 16px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+    font-size: 0.95rem; font-family: 'Outfit',sans-serif; outline: none; transition: border 0.2s;
+    background: #fafbfe;
+  }
+  .form-input:focus { border-color: var(--primary); background: #fff; }
+  .otp-row { display: flex; gap: 10px; }
+  .otp-input { flex:1; text-align:center; font-size:1.4rem; font-weight:700; letter-spacing:4px; }
+  .btn {
+    width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); font-size: 1rem;
+    font-weight: 700; font-family: 'Outfit',sans-serif; cursor: pointer; transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 4px 20px rgba(26,108,246,0.3); }
+  .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-accent { background: var(--accent); color: #fff; }
+  .otp-timer { text-align: center; margin-top: 12px; font-size: 0.85rem; color: var(--muted); }
+  .otp-timer a { color: var(--primary); cursor: pointer; font-weight: 600; }
+  .form-group { margin-bottom: 16px; }
+  .disclaimer {
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 12px 14px;
+    font-size: 0.82rem; color: #7a5c00; margin-top: 20px; line-height: 1.5;
+  }
+  .disclaimer strong { color: #5a3e00; }
+
+  /* ── APP SHELL ── */
+  #app-shell { display: none; flex-direction: column; min-height: 100vh; }
+  #app-shell.active { display: flex; }
+
+  .top-bar {
+    background: #fff; border-bottom: 1px solid var(--border); padding: 0 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 12px rgba(26,108,246,0.06);
+  }
+  .top-bar-logo { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+  .top-bar-logo span { color: var(--accent); }
+  .top-bar-right { display: flex; align-items: center; gap: 12px; }
+  .avatar {
+    width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg,var(--primary),var(--accent));
+    display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.95rem;
+    cursor: pointer;
+  }
+  .lang-sel {
+    border: 2px solid var(--border); border-radius: 8px; padding: 5px 10px; font-family: 'Outfit',sans-serif;
+    font-size: 0.85rem; cursor: pointer; background: #fafbfe; outline: none;
+  }
+
+  .main-content { flex: 1; overflow-y: auto; padding-bottom: 80px; }
+
+  /* ── BOTTOM NAV ── */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 0; right: 0; background: #fff;
+    border-top: 1px solid var(--border); display: flex; z-index: 100;
+    box-shadow: 0 -4px 20px rgba(26,108,246,0.08);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 10px 4px 8px; cursor: pointer; color: var(--muted); font-size: 0.7rem; font-weight: 600;
+    transition: color 0.2s; gap: 4px;
+  }
+  .nav-item.active { color: var(--primary); }
+  .nav-item svg { width: 22px; height: 22px; }
+  .nav-dot {
+    position: absolute; top: 8px; right: calc(50% - 14px);
+    width: 8px; height: 8px; border-radius: 50%; background: var(--danger);
+  }
+  .nav-item { position: relative; }
+
+  /* ── PAGES ── */
+  .page { display: none; padding: 20px; }
+  .page.active { display: block; }
+
+  /* ── HOME ── */
+  .home-hero {
+    background: linear-gradient(120deg,var(--primary) 0%,var(--primary-dark) 100%);
+    border-radius: 20px; padding: 24px 22px 32px; color: #fff; margin-bottom: 24px; position: relative; overflow: hidden;
+  }
+  .home-hero::after {
+    content:''; position:absolute; right:-20px; top:-20px; width:140px; height:140px;
+    background: rgba(255,255,255,0.07); border-radius: 50%;
+  }
+  .hero-greeting { font-size: 0.9rem; opacity: 0.85; margin-bottom: 4px; }
+  .hero-name { font-size: 1.6rem; font-weight: 800; margin-bottom: 12px; }
+  .hero-search {
+    display: flex; background: #fff; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .hero-search input {
+    flex:1; padding: 13px 16px; border: none; font-family:'Outfit',sans-serif; font-size:0.9rem; outline:none; color:var(--text);
+  }
+  .hero-search button {
+    background: var(--accent); border: none; padding: 0 18px; color: #fff; cursor: pointer; font-size: 1.1rem;
+  }
+  .section-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+  .specialty-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+  .specialty-card {
+    background: #fff; border-radius: var(--radius-sm); padding: 14px 8px; text-align: center;
+    cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow);
+  }
+  .specialty-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .specialty-icon { font-size: 1.8rem; margin-bottom: 6px; }
+  .specialty-name { font-size: 0.72rem; font-weight: 600; color: var(--text); }
+
+  /* ── DOCTOR CARD ── */
+  .doctor-card {
+    background: #fff; border-radius: var(--radius); padding: 16px; margin-bottom: 14px;
+    box-shadow: var(--shadow); cursor: pointer; transition: all 0.2s; display: flex; gap: 14px; align-items: flex-start;
+  }
+  .doctor-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .doctor-avatar {
+    width: 60px; height: 60px; border-radius: 14px; flex-shrink:0; overflow:hidden;
+    background: linear-gradient(135deg,#e8f0fe,#dbeafe);
+    display:flex; align-items:center; justify-content:center; font-size:1.6rem;
+  }
+  .doctor-info { flex: 1; }
+  .doctor-name { font-weight: 700; font-size: 1rem; color: var(--text); }
+  .doctor-spec { font-size: 0.82rem; color: var(--primary); font-weight: 600; margin: 2px 0; }
+  .doctor-meta { display:flex; gap:12px; margin-top:6px; flex-wrap:wrap; }
+  .meta-badge {
+    display:flex; align-items:center; gap:4px; font-size:0.78rem; color:var(--muted); font-weight:500;
+  }
+  .rating-badge { color: #f5a623; font-weight:700; font-size:0.85rem; }
+  .avail-dot { width:8px; height:8px; border-radius:50%; background:var(--success); }
+  .fee-badge { background:var(--primary-light); color:var(--primary); padding:4px 10px; border-radius:20px; font-size:0.78rem; font-weight:700; }
+
+  /* ── APPOINTMENT CARD ── */
+  .appt-card {
+    background: #fff; border-radius: var(--radius); padding: 18px; margin-bottom: 14px;
+    box-shadow: var(--shadow); border-left: 4px solid var(--primary);
+  }
+  .appt-card.past { border-left-color: var(--muted); opacity: 0.8; }
+  .appt-card.cancelled { border-left-color: var(--danger); }
+  .appt-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .appt-status { padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+  .status-upcoming { background:var(--primary-light); color:var(--primary); }
+  .status-completed { background:#e8f8f0; color:var(--success); }
+  .status-cancelled { background:#fde8e8; color:var(--danger); }
+  .appt-actions { display:flex; gap:8px; margin-top:14px; }
+  .btn-sm {
+    padding:8px 16px; border:none; border-radius:8px; font-size:0.82rem; font-weight:600;
+    cursor:pointer; font-family:'Outfit',sans-serif; transition:all 0.2s;
+  }
+  .btn-sm-primary { background:var(--primary); color:#fff; }
+  .btn-sm-outline { background:transparent; border:2px solid var(--border); color:var(--muted); }
+  .btn-sm-danger { background:#fde8e8; color:var(--danger); }
+
+  /* ── BOOKING MODAL ── */
+  .modal-overlay {
+    position:fixed; inset:0; background:rgba(10,20,60,0.45); z-index:200;
+    display:flex; align-items:flex-end; justify-content:center;
+    backdrop-filter: blur(4px);
+  }
+  .modal {
+    background:#fff; border-radius: 24px 24px 0 0; padding: 28px 24px 40px;
+    width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal-handle { width:40px; height:4px; background:var(--border); border-radius:4px; margin:0 auto 20px; }
+  .modal-title { font-size:1.2rem; font-weight:800; margin-bottom:18px; }
+  .date-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; margin-bottom:16px; }
+  .date-chip {
+    padding:10px 4px; text-align:center; border-radius:10px; cursor:pointer; border:2px solid var(--border);
+    font-size:0.75rem; font-weight:600; transition:all 0.2s;
+  }
+  .date-chip .day-num { font-size:1rem; font-weight:800; display:block; }
+  .date-chip.selected { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .date-chip:hover:not(.selected) { border-color:var(--primary); color:var(--primary); }
+  .time-grid { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px; }
+  .time-chip {
+    padding:9px 16px; border-radius:8px; cursor:pointer; border:2px solid var(--border);
+    font-size:0.82rem; font-weight:600; transition:all 0.2s;
+  }
+  .time-chip.selected { background:var(--primary); color:#fff; border-color:var(--primary); }
+  .time-chip.busy { background:var(--bg); color:var(--muted); cursor:not-allowed; }
+
+  /* ── REPORT ANALYSIS ── */
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: var(--radius); padding: 40px 24px;
+    text-align: center; cursor: pointer; transition: all 0.2s; background: #fafbfe;
+  }
+  .upload-zone:hover { border-color: var(--primary); background: var(--primary-light); }
+  .upload-icon { font-size: 3rem; margin-bottom: 12px; }
+  .upload-text { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .upload-sub { font-size: 0.82rem; color: var(--muted); }
+  .analysis-card {
+    background: #fff; border-radius: var(--radius); padding: 20px; margin-top: 20px;
+    box-shadow: var(--shadow);
+  }
+  .analysis-section { margin-bottom: 20px; }
+  .analysis-section h4 { font-size: 0.9rem; font-weight: 700; color: var(--text); margin-bottom: 10px; display:flex; align-items:center; gap:6px; }
+  .finding-item {
+    display:flex; align-items:flex-start; gap:10px; padding:10px 12px; border-radius:10px; margin-bottom:8px;
+  }
+  .finding-normal { background:#e8f8f0; }
+  .finding-warning { background:#fff8e1; }
+  .finding-danger { background:#fde8e8; }
+  .finding-dot { width:10px; height:10px; border-radius:50%; margin-top:3px; flex-shrink:0; }
+  .dot-normal { background:var(--success); }
+  .dot-warning { background:var(--warning); }
+  .dot-danger { background:var(--danger); }
+  .finding-text { font-size:0.85rem; color:var(--text); }
+  .finding-text strong { display:block; font-weight:700; }
+
+  /* ── MAP PLACEHOLDER ── */
+  .map-container {
+    background: linear-gradient(135deg,#e8f0fe 0%,#dbeafe 100%);
+    border-radius: var(--radius); height: 280px; position:relative; overflow:hidden;
+    display:flex; align-items:center; justify-content:center; margin-bottom:20px;
+  }
+  .map-grid {
+    position:absolute; inset:0; opacity:0.25;
+    background-image: linear-gradient(var(--primary) 1px,transparent 1px), linear-gradient(90deg,var(--primary) 1px,transparent 1px);
+    background-size: 40px 40px;
+  }
+  .map-pin {
+    position:absolute; display:flex; flex-direction:column; align-items:center; cursor:pointer;
+    animation: pinBounce 2s ease infinite;
+  }
+  @keyframes pinBounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .pin-icon { font-size:1.8rem; filter:drop-shadow(0 2px 6px rgba(26,108,246,0.4)); }
+  .pin-label { background:#fff; padding:3px 8px; border-radius:20px; font-size:0.7rem; font-weight:700; color:var(--primary); box-shadow:0 2px 8px rgba(0,0,0,0.12); white-space:nowrap; margin-top:2px; }
+  .map-label { font-size:0.9rem; font-weight:600; color:var(--primary); background:rgba(255,255,255,0.9); padding:8px 16px; border-radius:20px; z-index:1; }
+
+  /* ── EMERGENCY ── */
+  .sos-btn {
+    width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg,#f04545,#c0392b);
+    border: 6px solid #fde8e8; box-shadow: 0 0 0 0 rgba(240,69,69,0.4);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; font-size:1.4rem; font-weight:900; color:#fff; margin:0 auto 32px;
+    animation: pulseSOS 2s ease infinite; transition: transform 0.1s;
+  }
+  .sos-btn:active { transform:scale(0.95); }
+  @keyframes pulseSOS { 0%,100%{box-shadow:0 0 0 0 rgba(240,69,69,0.4)} 50%{box-shadow:0 0 0 20px rgba(240,69,69,0)} }
+  .emergency-card {
+    background:#fff; border-radius:var(--radius); padding:16px; margin-bottom:12px;
+    display:flex; align-items:center; gap:14px; box-shadow:var(--shadow); cursor:pointer;
+    transition:all 0.2s;
+  }
+  .emergency-card:hover { box-shadow:var(--shadow-lg); }
+  .emrg-icon { width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; flex-shrink:0; }
+  .emrg-red { background:#fde8e8; }
+  .emrg-orange { background:#fff3e0; }
+  .emrg-blue { background:var(--primary-light); }
+  .emrg-info { flex:1; }
+  .emrg-name { font-weight:700; font-size:0.95rem; }
+  .emrg-num { font-size:0.82rem; color:var(--muted); }
+  .call-btn { background:var(--success); color:#fff; border:none; border-radius:8px; padding:8px 14px; font-weight:700; font-size:0.82rem; cursor:pointer; }
+
+  /* ── CHAT ── */
+  .chat-container { display:flex; flex-direction:column; height:calc(100vh - 160px); }
+  .chat-messages { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .chat-bubble { max-width:80%; padding:12px 16px; border-radius:16px; font-size:0.9rem; line-height:1.5; }
+  .bubble-bot { background:#fff; box-shadow:var(--shadow); border-radius:0 16px 16px 16px; align-self:flex-start; }
+  .bubble-user { background:var(--primary); color:#fff; border-radius:16px 0 16px 16px; align-self:flex-end; }
+  .bubble-bot .bubble-name { font-size:0.72rem; font-weight:700; color:var(--primary); margin-bottom:4px; }
+  .chat-input-bar { display:flex; gap:10px; padding:12px 16px; background:#fff; border-top:1px solid var(--border); }
+  .chat-input { flex:1; padding:12px 16px; border:2px solid var(--border); border-radius:12px; font-size:0.92rem; font-family:'Outfit',sans-serif; outline:none; }
+  .chat-input:focus { border-color:var(--primary); }
+  .chat-send { background:var(--primary); color:#fff; border:none; border-radius:12px; padding:0 18px; cursor:pointer; font-size:1.2rem; }
+
+  /* ── PROFILE ── */
+  .profile-hero {
+    background: linear-gradient(120deg,var(--primary),var(--primary-dark));
+    border-radius:20px; padding:28px 20px; color:#fff; text-align:center; margin-bottom:20px;
+  }
+  .profile-avatar-lg {
+    width:80px; height:80px; border-radius:50%; background:rgba(255,255,255,0.2);
+    border:3px solid rgba(255,255,255,0.5); display:flex; align-items:center; justify-content:center;
+    font-size:2rem; font-weight:800; color:#fff; margin:0 auto 12px;
+  }
+  .profile-name-lg { font-size:1.4rem; font-weight:800; }
+  .profile-role { opacity:0.8; font-size:0.88rem; margin-top:3px; }
+  .info-row {
+    display:flex; align-items:center; justify-content:space-between; padding:14px 16px;
+    background:#fff; border-radius:12px; margin-bottom:8px; box-shadow:var(--shadow);
+  }
+  .info-label { font-size:0.82rem; color:var(--muted); font-weight:600; }
+  .info-value { font-size:0.9rem; font-weight:700; color:var(--text); }
+  .section-card { background:#fff; border-radius:var(--radius); padding:18px; margin-bottom:16px; box-shadow:var(--shadow); }
+
+  /* ── ADMIN ── */
+  .stat-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+  .stat-card {
+    background:#fff; border-radius:var(--radius); padding:20px; box-shadow:var(--shadow);
+    border-top:4px solid var(--primary);
+  }
+  .stat-card:nth-child(2) { border-top-color:var(--accent); }
+  .stat-card:nth-child(3) { border-top-color:var(--warning); }
+  .stat-card:nth-child(4) { border-top-color:var(--danger); }
+  .stat-num { font-size:2rem; font-weight:800; color:var(--text); }
+  .stat-label { font-size:0.8rem; color:var(--muted); font-weight:600; margin-top:2px; }
+  .data-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+  .data-table th { background:var(--primary-light); color:var(--primary); padding:10px 12px; text-align:left; font-weight:700; }
+  .data-table td { padding:10px 12px; border-bottom:1px solid var(--border); color:var(--text); }
+  .data-table tr:hover td { background:#fafbfe; }
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.72rem; font-weight:700; }
+  .badge-active { background:#e8f8f0; color:var(--success); }
+  .badge-pending { background:#fff8e1; color:var(--warning); }
+  .badge-inactive { background:#f5f5f5; color:var(--muted); }
+
+  /* ── DOCTOR DASHBOARD ── */
+  .today-card {
+    background:linear-gradient(120deg,var(--accent),#00a38a);
+    border-radius:20px; padding:20px; color:#fff; margin-bottom:20px;
+  }
+  .today-num { font-size:2.5rem; font-weight:800; }
+  .patient-queue-item {
+    background:#fff; border-radius:12px; padding:14px; margin-bottom:10px;
+    display:flex; align-items:center; gap:12px; box-shadow:var(--shadow);
+  }
+  .queue-num { width:32px; height:32px; border-radius:50%; background:var(--primary-light); color:var(--primary); font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:0.85rem; }
+
+  /* ── NOTIFICATION TOAST ── */
+  .toast {
+    position:fixed; top:76px; left:50%; transform:translateX(-50%) translateY(-20px); opacity:0;
+    background:#1a2236; color:#fff; padding:12px 24px; border-radius:12px; font-size:0.88rem;
+    font-weight:600; z-index:1000; transition:all 0.3s; pointer-events:none; white-space:nowrap;
+    box-shadow:0 8px 30px rgba(0,0,0,0.2);
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar { height:6px; background:var(--border); border-radius:4px; overflow:hidden; margin:8px 0; }
+  .progress-fill { height:100%; background:var(--primary); border-radius:4px; transition:width 0.5s; }
+
+  /* responsive tweaks */
+  @media(min-width:600px){
+    .specialty-grid{grid-template-columns:repeat(6,1fr);}
+    .modal{border-radius:24px;margin-bottom:20px;}
+    .main-content{max-width:600px;margin:0 auto;}
+  }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="splash-logo">Med<span>Care</span></div>
+  <div class="splash-sub">Your Complete Health Companion</div>
+  <div class="splash-loader"></div>
+</div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" class="screen">
+  <div class="auth-card">
+    <div class="auth-logo">Med<span>Care</span> 🏥</div>
+    <div class="auth-tagline">Book doctors. Analyse reports. Stay healthy.</div>
+
+    <!-- Role selector -->
+    <div class="role-tabs">
+      <div class="role-tab active" onclick="selectRole('patient',this)">🙋 Patient</div>
+      <div class="role-tab" onclick="selectRole('doctor',this)">👨‍⚕️ Doctor</div>
+      <div class="role-tab" onclick="selectRole('admin',this)">🛡️ Admin</div>
+    </div>
+
+    <!-- Step 1: Email -->
+    <div id="step-email">
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" id="login-email" class="form-input" placeholder="you@example.com" value="demo@medcare.app">
+      </div>
+      <button class="btn btn-primary" onclick="sendOTP()">Send OTP</button>
+      <div class="disclaimer">
+        <strong>⚕️ Medical Disclaimer:</strong> MedCare is not a replacement for professional medical advice, diagnosis, or treatment. Always consult a qualified doctor.
+      </div>
+      <div style="text-align:center;margin-top:14px;">
+        <a onclick="toggleSetup()" style="font-size:0.78rem;color:var(--primary);cursor:pointer;font-weight:600;">⚙️ Configure Real Email OTP (EmailJS Setup)</a>
+      </div>
+    </div>
+
+    <!-- Step 2: OTP -->
+    <div id="step-otp" class="hidden">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div style="font-size:2rem;">📧</div>
+        <div style="font-weight:700;font-size:1rem;margin-top:6px;">OTP sent to your email</div>
+        <div style="color:var(--muted);font-size:0.85rem;margin-top:4px;">Enter the 6-digit code below</div>
+      </div>
+      <div style="font-size:0.82rem;color:var(--muted);text-align:center;margin-bottom:14px;">OTP sent to <strong id="sent-to-email">your email</strong></div>
+      <!-- Demo mode banner (hidden in live mode) -->
+      <div id="demo-otp-banner" class="hidden" style="background:linear-gradient(90deg,#fff8e1,#fffde7);border:1.5px solid #ffe082;border-radius:12px;padding:12px 14px;margin-bottom:14px;text-align:center;">
+        <div style="font-size:0.78rem;font-weight:700;color:#b7860a;margin-bottom:4px;">🔧 DEMO MODE — EmailJS not configured</div>
+        <div style="font-size:0.82rem;color:#7a5c00;">Your OTP is: <strong id="demo-otp-code" style="font-size:1.3rem;letter-spacing:4px;color:#c97a00;display:block;margin-top:4px;">------</strong></div>
+      </div>
+      <div class="form-group">
+        <input type="text" id="otp-input" class="form-input otp-input" placeholder="• • • • • •" maxlength="6" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+      </div>
+      <div class="otp-timer" id="otp-timer-display">Code expires in <strong id="otp-countdown">60</strong>s</div>
+      <button id="otp-verify-btn" class="btn btn-primary" onclick="verifyOTP()">Verify & Login</button>
+      <div class="otp-timer" style="margin-top:10px">Didn't receive? <a onclick="resendOTP()">Resend OTP</a> &nbsp;|&nbsp; <a onclick="goBackToEmail()">Change Email</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app-shell">
+  <div class="top-bar">
+    <div class="top-bar-logo">Med<span>Care</span></div>
+    <div class="top-bar-right">
+      <select class="lang-sel" id="lang-sel" onchange="changeLang(this.value)">
+        <option value="en">🌐 EN</option>
+        <option value="hi">हि HI</option>
+        <option value="mr">म MR</option>
+      </select>
+      <div class="avatar" id="user-avatar" onclick="showPage('profile')">U</div>
+      <button style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:1.1rem;" onclick="logout()" title="Logout">⏻</button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <!-- HOME PAGE -->
+    <div id="page-home" class="page active">
+      <div class="home-hero">
+        <div class="hero-greeting" id="hero-greeting">Good morning,</div>
+        <div class="hero-name" id="hero-name">Patient</div>
+        <div class="hero-search">
+          <input id="search-input" placeholder="Search doctors, symptoms..." onkeyup="searchDoctors()">
+          <button onclick="searchDoctors()">🔍</button>
+        </div>
+      </div>
+
+      <div class="section-title">Quick Actions</div>
+      <div class="specialty-grid">
+        <div class="specialty-card" onclick="showPage('doctors')"><div class="specialty-icon">🫀</div><div class="specialty-name">Cardiology</div></div>
+        <div class="specialty-card" onclick="showPage('doctors')"><div class="specialty-icon">🧠</div><div class="specialty-name">Neurology</div></div>
+        <div class="specialty-card" onclick="showPage('doctors')"><div class="specialty-icon">🦴</div><div class="specialty-name">Orthopedic</div></div>
+        <div class="specialty-card" onclick="showPage('doctors')"><div class="specialty-icon">👶</div><div class="specialty-name">Pediatric</div></div>
+        <div class="specialty-card" onclick="showPage('reports')"><div class="specialty-icon">📋</div><div class="specialty-name">Reports</div></div>
+        <div class="specialty-card" onclick="showPage('emergency')"><div class="specialty-icon">🚑</div><div class="specialty-name">Emergency</div></div>
+        <div class="specialty-card" onclick="showPage('map')"><div class="specialty-icon">🗺️</div><div class="specialty-name">Near Me</div></div>
+        <div class="specialty-card" onclick="showPage('chat')"><div class="specialty-icon">🤖</div><div class="specialty-name">AI Chat</div></div>
+      </div>
+
+      <div class="section-title">⭐ Top Rated Doctors</div>
+      <div id="home-doctors"></div>
+
+      <div class="section-title">📅 Upcoming Appointments</div>
+      <div id="home-appointments"></div>
+
+      <div class="disclaimer">⚕️ <strong>Reminder:</strong> MedCare is a health companion, not a substitute for professional medical advice.</div>
+    </div>
+
+    <!-- DOCTORS PAGE -->
+    <div id="page-doctors" class="page">
+      <div style="margin-bottom:16px;display:flex;gap:10px;align-items:center;">
+        <input id="doc-search" class="form-input" style="flex:1;margin:0;" placeholder="Search by name or specialty..." oninput="renderDoctors()">
+        <select id="spec-filter" class="form-input" style="width:auto;margin:0;padding:13px 10px;" onchange="renderDoctors()">
+          <option value="">All</option>
+          <option>Cardiology</option>
+          <option>Neurology</option>
+          <option>General</option>
+          <option>Orthopedic</option>
+          <option>Pediatrics</option>
+          <option>Dermatology</option>
+        </select>
+      </div>
+      <div id="doctors-list"></div>
+    </div>
+
+    <!-- APPOINTMENTS PAGE -->
+    <div id="page-appointments" class="page">
+      <div style="display:flex;gap:8px;margin-bottom:18px;">
+        <button class="btn-sm btn-sm-primary" onclick="filterAppts('upcoming',this)">Upcoming</button>
+        <button class="btn-sm btn-sm-outline" onclick="filterAppts('past',this)">Past</button>
+        <button class="btn-sm btn-sm-outline" onclick="filterAppts('all',this)">All</button>
+      </div>
+      <div id="appointments-list"></div>
+    </div>
+
+    <!-- REPORTS PAGE -->
+    <div id="page-reports" class="page">
+      <div class="section-title">📄 Medical Report Analysis (AI)</div>
+      <div class="upload-zone" onclick="document.getElementById('report-file').click()" id="upload-zone">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Upload Medical Report</div>
+        <div class="upload-sub">PDF or Image (JPG, PNG) • Max 10MB</div>
+      </div>
+      <input type="file" id="report-file" class="hidden" accept=".pdf,.jpg,.jpeg,.png" onchange="analyzeReport(event)">
+
+      <div id="analysis-loading" class="hidden" style="text-align:center;padding:30px;">
+        <div style="font-size:2.5rem;margin-bottom:12px;animation:spin 1.5s linear infinite;display:inline-block;">⚙️</div>
+        <div style="font-weight:600;color:var(--primary);">Analysing your report with AI...</div>
+        <div style="color:var(--muted);font-size:0.85rem;margin-top:6px;">This may take a few seconds</div>
+        <div class="progress-bar" style="margin-top:16px;"><div class="progress-fill" id="analysis-progress" style="width:0%"></div></div>
+      </div>
+      <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+      <div id="analysis-result" class="hidden"></div>
+
+      <div class="section-title" style="margin-top:24px;">📂 Past Reports</div>
+      <div id="past-reports"></div>
+    </div>
+
+    <!-- MAP PAGE -->
+    <div id="page-map" class="page">
+      <div class="section-title">📍 Nearby Doctors & Hospitals</div>
+      <div class="map-container">
+        <div class="map-grid"></div>
+        <div class="map-pin" style="left:30%;top:35%"><div class="pin-icon">🏥</div><div class="pin-label">City Hospital</div></div>
+        <div class="map-pin" style="left:55%;top:25%;animation-delay:0.5s"><div class="pin-icon">👨‍⚕️</div><div class="pin-label">Dr. Patel – 0.8km</div></div>
+        <div class="map-pin" style="left:70%;top:55%;animation-delay:1s"><div class="pin-icon">🏥</div><div class="pin-label">Medicare Clinic</div></div>
+        <div class="map-pin" style="left:20%;top:65%;animation-delay:0.3s"><div class="pin-icon">👩‍⚕️</div><div class="pin-label">Dr. Sharma – 1.2km</div></div>
+        <div class="map-pin" style="left:45%;top:70%;animation-delay:0.8s"><div class="pin-icon">🚑</div><div class="pin-label">Apollo – 2km</div></div>
+      </div>
+      <div class="section-title">Nearby Places</div>
+      <div id="map-list"></div>
+    </div>
+
+    <!-- EMERGENCY PAGE -->
+    <div id="page-emergency" class="page" style="text-align:center;">
+      <div style="padding:20px 0 10px;">
+        <div style="font-size:1.1rem;font-weight:800;color:var(--danger);margin-bottom:4px;">⚡ EMERGENCY</div>
+        <div style="color:var(--muted);font-size:0.85rem;margin-bottom:24px;">Press SOS to alert emergency contacts</div>
+        <div class="sos-btn" onclick="triggerSOS()">
+          <span style="font-size:2rem;">🆘</span>
+          <span style="font-size:0.85rem;margin-top:4px;">SOS</span>
+        </div>
+      </div>
+      <div style="text-align:left;">
+        <div class="section-title">Emergency Contacts</div>
+        <div class="emergency-card" onclick="callNumber('102')">
+          <div class="emrg-icon emrg-red">🚑</div>
+          <div class="emrg-info"><div class="emrg-name">Ambulance</div><div class="emrg-num">102 • Available 24/7</div></div>
+          <button class="call-btn">📞 Call</button>
+        </div>
+        <div class="emergency-card" onclick="callNumber('108')">
+          <div class="emrg-icon emrg-orange">🏥</div>
+          <div class="emrg-info"><div class="emrg-name">Emergency Medical Services</div><div class="emrg-num">108 • Free service</div></div>
+          <button class="call-btn">📞 Call</button>
+        </div>
+        <div class="emergency-card" onclick="callNumber('1800-11-4477')">
+          <div class="emrg-icon emrg-blue">💊</div>
+          <div class="emrg-info"><div class="emrg-name">Poison Control</div><div class="emrg-num">1800-11-4477 • Toll free</div></div>
+          <button class="call-btn">📞 Call</button>
+        </div>
+        <div class="emergency-card" onclick="callNumber('112')">
+          <div class="emrg-icon emrg-red">🚨</div>
+          <div class="emrg-info"><div class="emrg-name">National Emergency</div><div class="emrg-num">112 • Police/Fire/Ambulance</div></div>
+          <button class="call-btn">📞 Call</button>
+        </div>
+        <div class="emergency-card" onclick="callNumber('1800-599-0019')">
+          <div class="emrg-icon emrg-blue">🧠</div>
+          <div class="emrg-info"><div class="emrg-name">Mental Health Helpline</div><div class="emrg-num">1800-599-0019 • NIMHANS</div></div>
+          <button class="call-btn">📞 Call</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHAT PAGE -->
+    <div id="page-chat" class="page" style="padding:0;">
+      <div style="padding:16px 16px 0;"><div class="section-title">🤖 AI Health Assistant</div></div>
+      <div class="chat-container">
+        <div class="chat-messages" id="chat-messages"></div>
+        <div style="padding:8px 16px;background:#fafbfe;border-top:1px solid var(--border);">
+          <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;">
+            <button class="btn-sm" style="background:var(--primary-light);color:var(--primary);white-space:nowrap;" onclick="quickChat('What does low hemoglobin mean?')">Low hemoglobin?</button>
+            <button class="btn-sm" style="background:var(--primary-light);color:var(--primary);white-space:nowrap;" onclick="quickChat('What is HbA1c?')">What is HbA1c?</button>
+            <button class="btn-sm" style="background:var(--primary-light);color:var(--primary);white-space:nowrap;" onclick="quickChat('I have chest pain')">Chest pain</button>
+          </div>
+        </div>
+        <div class="chat-input-bar">
+          <input class="chat-input" id="chat-input" placeholder="Ask about your health..." onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="chat-send" onclick="sendChat()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="page-profile" class="page"></div>
+
+    <!-- ADMIN PAGE -->
+    <div id="page-admin" class="page"></div>
+
+    <!-- DOCTOR DASHBOARD PAGE -->
+    <div id="page-doctor-dash" class="page"></div>
+  </div>
+
+  <!-- BOTTOM NAV (changes by role) -->
+  <div class="bottom-nav" id="bottom-nav"></div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div id="booking-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="booking-doctor-name">Book Appointment</div>
+    <div class="section-title" style="font-size:0.9rem;margin-bottom:10px;">Select Date</div>
+    <div class="date-grid" id="booking-dates"></div>
+    <div class="section-title" style="font-size:0.9rem;margin-bottom:10px;">Select Time</div>
+    <div class="time-grid" id="booking-times"></div>
+    <div class="form-group">
+      <label class="form-label">Reason for visit</label>
+      <input type="text" id="booking-reason" class="form-input" placeholder="e.g. Fever, checkup, follow-up...">
+    </div>
+    <button class="btn btn-primary" onclick="confirmBooking()">✅ Confirm Appointment</button>
+    <button class="btn btn-outline" onclick="closeModal()" style="margin-top:8px;">Cancel</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────
+const DOCTORS = [
+  {id:1,name:'Dr. Rajesh Patel',spec:'Cardiology',exp:'12 yrs',rating:4.8,loc:'Panaji, Goa',fee:500,avail:true,emoji:'👨‍⚕️',reviews:142},
+  {id:2,name:'Dr. Priya Sharma',spec:'Neurology',exp:'9 yrs',rating:4.7,loc:'Margao, Goa',fee:600,avail:true,emoji:'👩‍⚕️',reviews:89},
+  {id:3,name:'Dr. Anil Kumar',spec:'Orthopedic',exp:'15 yrs',rating:4.9,loc:'Vasco, Goa',fee:450,avail:false,emoji:'👨‍⚕️',reviews:203},
+  {id:4,name:'Dr. Meena Iyer',spec:'Pediatrics',exp:'7 yrs',rating:4.6,loc:'Mapusa, Goa',fee:400,avail:true,emoji:'👩‍⚕️',reviews:67},
+  {id:5,name:'Dr. Suresh Naik',spec:'General',exp:'20 yrs',rating:4.5,loc:'Ponda, Goa',fee:300,avail:true,emoji:'👨‍⚕️',reviews:311},
+  {id:6,name:'Dr. Kavya Desai',spec:'Dermatology',exp:'6 yrs',rating:4.7,loc:'Panaji, Goa',fee:550,avail:true,emoji:'👩‍⚕️',reviews:55},
+];
+const NEARBY = [
+  {name:'Apollo Hospital',type:'Hospital',dist:'2.0 km',emoji:'🏥'},
+  {name:'Goa Medical College',type:'Hospital',dist:'3.4 km',emoji:'🏥'},
+  {name:'Dr. Patel Clinic',type:'Clinic',dist:'0.8 km',emoji:'👨‍⚕️'},
+  {name:'CityMed Pharmacy',type:'Pharmacy',dist:'0.3 km',emoji:'💊'},
+];
+const SAMPLE_APPTS = [
+  {id:1,doc:'Dr. Rajesh Patel',spec:'Cardiology',date:'2026-03-28',time:'10:30 AM',reason:'Chest checkup',status:'upcoming'},
+  {id:2,doc:'Dr. Priya Sharma',spec:'Neurology',date:'2026-03-18',time:'3:00 PM',reason:'Headache follow-up',status:'completed'},
+  {id:3,doc:'Dr. Anil Kumar',spec:'Orthopedic',date:'2026-03-10',time:'11:00 AM',reason:'Knee pain',status:'cancelled'},
+];
+const PAST_REPORTS = [
+  {name:'Blood Test Report',date:'2026-03-01',type:'pdf'},
+  {name:'X-Ray Left Knee',date:'2026-02-15',type:'image'},
+];
+const CHAT_RESPONSES = {
+  'hemoglobin': '🩸 <strong>Low Hemoglobin</strong> (below 12 g/dL for women, 13 g/dL for men) is called <em>anemia</em>. Common causes include iron deficiency, poor diet, or blood loss. Symptoms: fatigue, pallor, shortness of breath. Treatment often involves iron supplements and dietary changes. <br><br>⚕️ <em>Please consult your doctor for proper diagnosis.</em>',
+  'hba1c': '🍬 <strong>HbA1c</strong> (Glycated Hemoglobin) measures average blood sugar over 3 months. Normal: below 5.7%. Pre-diabetes: 5.7–6.4%. Diabetes: 6.5% or above. It helps track long-term blood sugar control without daily testing. <br><br>⚕️ <em>Always discuss results with your doctor.</em>',
+  'chest': '⚠️ Chest pain can have many causes – some require urgent attention. <strong>Seek immediate care</strong> if pain is severe, spreads to arm/jaw, or comes with shortness of breath (possible heart attack). Less serious causes include acid reflux, muscle strain, or anxiety. <br><br>🚨 <strong>Call 102 if severe!</strong>',
+  'sugar': '🍭 High blood sugar (hyperglycemia) can cause fatigue, frequent urination, and thirst. Normal fasting level: 70–100 mg/dL. Levels above 126 mg/dL may indicate diabetes. Diet, exercise, and medication can help manage it. <br><br>⚕️ <em>Consult a diabetologist for personalised advice.</em>',
+  'default': '🤖 I\'m MedCare\'s AI assistant. I can help explain medical terms, lab values, and general health questions. For specific medical advice or diagnosis, please consult a qualified doctor. <br><br>💡 Try asking: "What does low hemoglobin mean?" or "What is HbA1c?"',
+};
+
+// ─── STATE ──────────────────────────────────────────────────────────
+let currentRole = 'patient';
+let currentUser = {name:'Rahul Verma',email:'demo@medcare.app',age:28,gender:'Male'};
+let otpTimer = null;
+let otpValue = '';
+let appointments = [...SAMPLE_APPTS];
+let selectedDate = null;
+let selectedTime = null;
+let selectedDoctor = null;
+let chatHistory = [];
+let currentLang = 'en';
+
+const LANGS = {
+  en: {home:'Home',doctors:'Doctors',appts:'Appointments',reports:'Reports',map:'Map',emergency:'Emergency',chat:'Chat',profile:'Profile'},
+  hi: {home:'होम',doctors:'डॉक्टर',appts:'अपॉइंटमेंट',reports:'रिपोर्ट',map:'नक्शा',emergency:'आपातकाल',chat:'चैट',profile:'प्रोफ़ाइल'},
+  mr: {home:'मुख्यपृष्ठ',doctors:'डॉक्टर',appts:'भेट',reports:'अहवाल',map:'नकाशा',emergency:'आणीबाणी',chat:'चॅट',profile:'प्रोफाइल'},
+};
+
+// ─── SPLASH ─────────────────────────────────────────────────────────
+setTimeout(()=>{
+  document.getElementById('splash').style.display='none';
+  document.getElementById('auth-screen').classList.add('active');
+}, 3000);
+
+// ─── AUTH ────────────────────────────────────────────────────────────
+function selectRole(role, el) {
+  currentRole = role;
+  document.querySelectorAll('.role-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ─── EMAILJS CONFIG ─────────────────────────────────────────────────
+// Fill these in after setting up EmailJS (see setup guide in the app)
+const EMAILJS_PUBLIC_KEY  = '';   // e.g. 'user_XXXXXXXXXXXX'
+const EMAILJS_SERVICE_ID  = '';   // e.g. 'service_XXXXXXX'
+const EMAILJS_TEMPLATE_ID = '';   // e.g. 'template_XXXXXXX'
+
+let emailJsReady = false;
+function initEmailJS() {
+  if (EMAILJS_PUBLIC_KEY) {
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+    emailJsReady = true;
+  }
+}
+initEmailJS();
+
+async function sendOTP() {
+  const emailEl = document.getElementById('login-email');
+  const email = emailEl ? emailEl.value.trim() : '';
+  if (!email || !email.includes('@')) {
+    showAuthError('Please enter a valid email address.');
+    return;
+  }
+
+  otpValue = Math.floor(100000 + Math.random() * 900000).toString();
+  const sendBtn = document.querySelector('#step-email .btn');
+  sendBtn.textContent = 'Sending…';
+  sendBtn.disabled = true;
+
+  if (!emailJsReady || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
+    // ── Demo mode: no EmailJS keys configured ──
+    sendBtn.textContent = 'Send OTP';
+    sendBtn.disabled = false;
+    document.getElementById('step-email').classList.add('hidden');
+    document.getElementById('step-otp').classList.remove('hidden');
+    document.getElementById('otp-input').value = '';
+    document.getElementById('demo-otp-banner').classList.remove('hidden');
+    document.getElementById('demo-otp-code').textContent = otpValue;
+    startOTPTimer();
+    return;
+  }
+
+  // ── Live mode: send real email via EmailJS ──
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      to_email: email,
+      otp_code: otpValue,
+      app_name: 'MedCare',
+    });
+    sendBtn.textContent = 'Send OTP';
+    sendBtn.disabled = false;
+    document.getElementById('step-email').classList.add('hidden');
+    document.getElementById('step-otp').classList.remove('hidden');
+    document.getElementById('otp-input').value = '';
+    document.getElementById('demo-otp-banner').classList.add('hidden');
+    document.getElementById('sent-to-email').textContent = email;
+    startOTPTimer();
+  } catch (err) {
+    sendBtn.textContent = 'Send OTP';
+    sendBtn.disabled = false;
+    showAuthError('Failed to send OTP: ' + (err.text || err.message || 'Unknown error') + '. Check your EmailJS keys.');
+  }
+}
+
+function startOTPTimer() {
+  let t = 60;
+  document.getElementById('otp-countdown').textContent = t;
+  clearInterval(otpTimer);
+  otpTimer = setInterval(()=>{
+    t--;
+    document.getElementById('otp-countdown').textContent = t;
+    if (t<=0) { clearInterval(otpTimer); document.getElementById('otp-timer-display').textContent = 'OTP expired. Please resend.'; }
+  }, 1000);
+}
+
+async function resendOTP() {
+  const email = document.getElementById('login-email').value.trim();
+  otpValue = Math.floor(100000 + Math.random() * 900000).toString();
+  if (!emailJsReady || !EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID) {
+    document.getElementById('demo-otp-code').textContent = otpValue;
+    document.getElementById('demo-otp-banner').classList.remove('hidden');
+    toast('New OTP generated (demo mode)');
+  } else {
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: email, otp_code: otpValue, app_name: 'MedCare' });
+      toast('📧 New OTP sent to ' + email);
+    } catch(e) { toast('Send failed – using demo OTP: ' + otpValue); }
+  }
+  startOTPTimer();
+}
+
+function verifyOTP() {
+  const otpInput = document.getElementById('otp-input');
+  const entered = otpInput ? otpInput.value.trim() : '';
+  if (!entered || entered.length < 6) { showAuthError('Please enter the 6-digit OTP.'); return; }
+  if (entered === otpValue) {
+    clearInterval(otpTimer);
+    document.getElementById('otp-verify-btn').textContent = '✅ Verified!';
+    setTimeout(loginSuccess, 500);
+  } else {
+    showAuthError('Incorrect OTP. Please try again.');
+    otpInput.style.borderColor = 'var(--danger)';
+    otpInput.value = '';
+    otpInput.focus();
+    setTimeout(() => { otpInput.style.borderColor = ''; hideAuthError(); }, 3000);
+  }
+}
+
+function showAuthError(msg) {
+  let el = document.getElementById('auth-error');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'auth-error';
+    el.style.cssText = 'background:#fde8e8;color:#c0392b;padding:10px 14px;border-radius:10px;font-size:0.85rem;font-weight:600;margin-top:12px;';
+    document.querySelector('.auth-card').appendChild(el);
+  }
+  el.textContent = '⚠️ ' + msg;
+  el.style.display = 'block';
+}
+function hideAuthError() {
+  const el = document.getElementById('auth-error');
+  if (el) el.style.display = 'none';
+}
+
+function loginSuccess() {
+  document.getElementById('auth-screen').classList.remove('active');
+  document.getElementById('app-shell').classList.add('active');
+  initApp();
+}
+
+function goBackToEmail() {
+  clearInterval(otpTimer);
+  document.getElementById('step-otp').classList.add('hidden');
+  document.getElementById('step-email').classList.remove('hidden');
+  hideAuthError();
+}
+
+function logout() {
+  document.getElementById('app-shell').classList.remove('active');
+  document.getElementById('auth-screen').classList.add('active');
+  document.getElementById('step-email').classList.remove('hidden');
+  document.getElementById('step-otp').classList.add('hidden');
+  toast('Logged out successfully');
+}
+
+// ─── APP INIT ────────────────────────────────────────────────────────
+function initApp() {
+  buildNav();
+  updateAvatar();
+  renderHome();
+  renderDoctors();
+  renderAppointments('upcoming');
+  renderPastReports();
+  renderMapList();
+  initChat();
+  renderProfile();
+  if(currentRole==='admin') renderAdmin();
+  if(currentRole==='doctor') renderDoctorDash();
+  showPage('home');
+}
+
+function buildNav() {
+  const L = LANGS[currentLang];
+  const nav = document.getElementById('bottom-nav');
+  const items = currentRole==='admin' ? [
+    {id:'home',icon:'🏠',label:L.home},
+    {id:'admin',icon:'🛡️',label:'Admin'},
+    {id:'doctors',icon:'👨‍⚕️',label:L.doctors},
+    {id:'profile',icon:'👤',label:L.profile},
+  ] : currentRole==='doctor' ? [
+    {id:'home',icon:'🏠',label:L.home},
+    {id:'doctor-dash',icon:'📋',label:'Dashboard'},
+    {id:'appointments',icon:'📅',label:L.appts},
+    {id:'chat',icon:'🤖',label:L.chat},
+    {id:'profile',icon:'👤',label:L.profile},
+  ] : [
+    {id:'home',icon:'🏠',label:L.home},
+    {id:'doctors',icon:'👨‍⚕️',label:L.doctors},
+    {id:'appointments',icon:'📅',label:L.appts,dot:true},
+    {id:'reports',icon:'📋',label:L.reports},
+    {id:'emergency',icon:'🚨',label:L.emergency},
+    {id:'chat',icon:'🤖',label:L.chat},
+  ];
+  nav.innerHTML = items.map(i=>`
+    <div class="nav-item" id="nav-${i.id}" onclick="showPage('${i.id}')">
+      <span>${i.icon}</span>
+      <span>${i.label}</span>
+      ${i.dot?'<div class="nav-dot"></div>':''}
+    </div>`).join('');
+}
+
+function updateAvatar() {
+  const a = document.getElementById('user-avatar');
+  a.textContent = currentUser.name[0].toUpperCase();
+}
+
+function changeLang(lang) {
+  currentLang = lang;
+  buildNav();
+  showPage('home');
+}
+
+// ─── NAVIGATION ─────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pg = document.getElementById('page-'+id);
+  if(pg) pg.classList.add('active');
+  const nav = document.getElementById('nav-'+id);
+  if(nav) nav.classList.add('active');
+}
+
+// ─── HOME ────────────────────────────────────────────────────────────
+function renderHome() {
+  const hr = new Date().getHours();
+  document.getElementById('hero-greeting').textContent = hr < 12 ? 'Good morning, 🌅' : hr < 17 ? 'Good afternoon, ☀️' : 'Good evening, 🌙';
+  document.getElementById('hero-name').textContent = currentUser.name;
+
+  // top 3 doctors
+  const hd = document.getElementById('home-doctors');
+  hd.innerHTML = DOCTORS.slice(0,3).map(d=>doctorCardHTML(d)).join('');
+
+  // next appointment
+  const ha = document.getElementById('home-appointments');
+  const upcome = appointments.filter(a=>a.status==='upcoming');
+  if(upcome.length) {
+    ha.innerHTML = upcome.slice(0,2).map(a=>apptCardHTML(a)).join('');
+  } else {
+    ha.innerHTML = '<div style="text-align:center;padding:24px;color:var(--muted);"><div style="font-size:2rem;">📅</div><div style="margin-top:8px;font-size:0.9rem;">No upcoming appointments</div><button class="btn btn-primary" style="width:auto;padding:10px 24px;margin:12px auto 0;display:block;" onclick="showPage(\'doctors\')">Book Now</button></div>';
+  }
+}
+
+function searchDoctors() {
+  showPage('doctors');
+  const q = document.getElementById('search-input').value;
+  document.getElementById('doc-search').value = q;
+  renderDoctors();
+}
+
+// ─── DOCTORS ─────────────────────────────────────────────────────────
+function doctorCardHTML(d) {
+  return `<div class="doctor-card" onclick="openBooking(${d.id})">
+    <div class="doctor-avatar">${d.emoji}</div>
+    <div class="doctor-info">
+      <div class="doctor-name">${d.name}</div>
+      <div class="doctor-spec">${d.spec}</div>
+      <div class="doctor-meta">
+        <span class="rating-badge">⭐ ${d.rating}</span>
+        <span class="meta-badge">${d.exp} exp</span>
+        <span class="meta-badge">📍 ${d.loc}</span>
+        <span class="meta-badge">${d.avail?'<span class="avail-dot"></span> Available':'Busy'}</span>
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;justify-content:space-between;">
+        <span class="fee-badge">₹${d.fee} / visit</span>
+        <span style="font-size:0.75rem;color:var(--muted);">${d.reviews} reviews</span>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderDoctors() {
+  const q = (document.getElementById('doc-search')?.value||'').toLowerCase();
+  const sp = document.getElementById('spec-filter')?.value||'';
+  const filtered = DOCTORS.filter(d=>
+    (!q || d.name.toLowerCase().includes(q) || d.spec.toLowerCase().includes(q) || d.loc.toLowerCase().includes(q)) &&
+    (!sp || d.spec===sp)
+  );
+  const list = document.getElementById('doctors-list');
+  list.innerHTML = filtered.length ? filtered.map(d=>doctorCardHTML(d)).join('') :
+    '<div style="text-align:center;padding:32px;color:var(--muted);">No doctors found matching your search.</div>';
+}
+
+// ─── BOOKING MODAL ────────────────────────────────────────────────────
+function openBooking(docId) {
+  selectedDoctor = DOCTORS.find(d=>d.id===docId);
+  document.getElementById('booking-doctor-name').textContent = 'Book with ' + selectedDoctor.name;
+  selectedDate=null; selectedTime=null;
+
+  // build dates (next 7 days)
+  const dg = document.getElementById('booking-dates');
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  dg.innerHTML = Array.from({length:7},(_,i)=>{
+    const d = new Date(); d.setDate(d.getDate()+i);
+    return `<div class="date-chip" onclick="selectDate(this,'${d.toISOString().split('T')[0]}')">
+      <span style="font-size:0.65rem;color:var(--muted)">${days[d.getDay()]}</span>
+      <span class="day-num">${d.getDate()}</span>
+      <span style="font-size:0.65rem;color:var(--muted)">${months[d.getMonth()]}</span>
+    </div>`;
+  }).join('');
+
+  // time slots
+  const tg = document.getElementById('booking-times');
+  const times=['9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','2:00 PM','2:30 PM','3:00 PM','4:00 PM','4:30 PM'];
+  const busy = ['10:00 AM','2:30 PM'];
+  tg.innerHTML = times.map(t=>`<div class="time-chip ${busy.includes(t)?'busy':''}" onclick="${busy.includes(t)?'':'selectTime(this,\''+t+'\')'}">${t}</div>`).join('');
+
+  document.getElementById('booking-modal').classList.remove('hidden');
+}
+
+function selectDate(el,date) {
+  document.querySelectorAll('.date-chip').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected'); selectedDate=date;
+}
+function selectTime(el,time) {
+  document.querySelectorAll('.time-chip:not(.busy)').forEach(c=>c.classList.remove('selected'));
+  el.classList.add('selected'); selectedTime=time;
+}
+function closeModal() { document.getElementById('booking-modal').classList.add('hidden'); }
+function confirmBooking() {
+  if(!selectedDate||!selectedTime){toast('Please select date and time');return;}
+  const reason = document.getElementById('booking-reason').value || 'General checkup';
+  appointments.unshift({id:Date.now(),doc:selectedDoctor.name,spec:selectedDoctor.spec,date:selectedDate,time:selectedTime,reason,status:'upcoming'});
+  closeModal();
+  renderHome();
+  renderAppointments('upcoming');
+  toast('✅ Appointment booked successfully! Reminder sent.');
+}
+
+// ─── APPOINTMENTS ─────────────────────────────────────────────────────
+function apptCardHTML(a) {
+  const past = a.status==='completed'||a.status==='cancelled';
+  return `<div class="appt-card ${a.status==='cancelled'?'cancelled':past?'past':''}">
+    <div class="appt-header">
+      <div>
+        <div style="font-weight:700;font-size:1rem;">${a.doc}</div>
+        <div style="color:var(--primary);font-size:0.82rem;font-weight:600;">${a.spec}</div>
+      </div>
+      <span class="appt-status status-${a.status}">${a.status.toUpperCase()}</span>
+    </div>
+    <div style="display:flex;gap:16px;font-size:0.83rem;color:var(--muted);">
+      <span>📅 ${a.date}</span><span>⏰ ${a.time}</span>
+    </div>
+    <div style="font-size:0.83rem;color:var(--muted);margin-top:4px;">📝 ${a.reason}</div>
+    ${a.status==='upcoming'?`<div class="appt-actions">
+      <button class="btn-sm btn-sm-primary" onclick="rescheduleAppt(${a.id})">Reschedule</button>
+      <button class="btn-sm btn-sm-danger" onclick="cancelAppt(${a.id})">Cancel</button>
+    </div>`:''}
+  </div>`;
+}
+
+function renderAppointments(filter) {
+  const list = document.getElementById('appointments-list');
+  const filtered = filter==='all' ? appointments : appointments.filter(a=>a.status===filter||(filter==='past'&&(a.status==='completed'||a.status==='cancelled')));
+  list.innerHTML = filtered.length ? filtered.map(a=>apptCardHTML(a)).join('') :
+    `<div style="text-align:center;padding:32px;color:var(--muted);"><div style="font-size:2.5rem;">📭</div><div style="margin-top:10px;">No ${filter} appointments</div></div>`;
+}
+
+function filterAppts(type, el) {
+  document.querySelectorAll('#page-appointments .btn-sm').forEach(b=>{b.className='btn-sm btn-sm-outline';});
+  el.className='btn-sm btn-sm-primary';
+  renderAppointments(type==='past'?'past':type);
+}
+
+function cancelAppt(id) {
+  appointments = appointments.map(a=>a.id===id?{...a,status:'cancelled'}:a);
+  renderAppointments('upcoming'); renderHome();
+  toast('Appointment cancelled');
+}
+function rescheduleAppt(id) {
+  const a = appointments.find(x=>x.id===id);
+  if(a){ selectedDoctor={name:a.doc,spec:a.spec}; openBooking(DOCTORS.find(d=>d.name===a.doc)?.id||1); }
+}
+
+// ─── REPORT ANALYSIS ─────────────────────────────────────────────────
+function analyzeReport(e) {
+  const file = e.target.files[0]; if(!file) return;
+  document.getElementById('analysis-result').classList.add('hidden');
+  document.getElementById('analysis-loading').classList.remove('hidden');
+  document.getElementById('upload-zone').style.opacity='0.5';
+
+  // Simulate progress
+  let prog=0;
+  const pi = setInterval(()=>{
+    prog = Math.min(prog + Math.random()*15, 95);
+    document.getElementById('analysis-progress').style.width = prog+'%';
+  }, 200);
+
+  setTimeout(()=>{
+    clearInterval(pi);
+    document.getElementById('analysis-progress').style.width='100%';
+    setTimeout(()=>{
+      document.getElementById('analysis-loading').classList.add('hidden');
+      document.getElementById('upload-zone').style.opacity='1';
+      showAnalysis(file.name);
+    }, 400);
+  }, 3000);
+}
+
+function showAnalysis(filename) {
+  const html = `<div class="analysis-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+      <span style="font-size:1.5rem;">🧪</span>
+      <div><div style="font-weight:800;font-size:1rem;">${filename}</div><div style="font-size:0.78rem;color:var(--muted);">AI Analysis Complete • ${new Date().toLocaleDateString()}</div></div>
+    </div>
+    <div class="analysis-section">
+      <h4>📊 Key Findings</h4>
+      <div class="finding-item finding-danger"><div class="finding-dot dot-danger"></div><div class="finding-text"><strong>Hemoglobin: 10.2 g/dL</strong>Below normal (Normal: 13.5–17.5 g/dL). Possible iron-deficiency anemia. Consult a doctor.</div></div>
+      <div class="finding-item finding-warning"><div class="finding-dot dot-warning"></div><div class="finding-text"><strong>Blood Sugar (Fasting): 112 mg/dL</strong>Slightly elevated (Normal: 70–100 mg/dL). Monitor diet; discuss with doctor.</div></div>
+      <div class="finding-item finding-normal"><div class="finding-dot dot-normal"></div><div class="finding-text"><strong>WBC Count: 7,200 /μL</strong>Within normal range (4,000–11,000 /μL). No infection detected.</div></div>
+      <div class="finding-item finding-normal"><div class="finding-dot dot-normal"></div><div class="finding-text"><strong>Platelets: 230,000 /μL</strong>Normal range. No clotting concerns.</div></div>
+      <div class="finding-item finding-warning"><div class="finding-dot dot-warning"></div><div class="finding-text"><strong>Cholesterol: 215 mg/dL</strong>Borderline high (Desirable: < 200 mg/dL). Dietary modification advised.</div></div>
+    </div>
+    <div class="analysis-section">
+      <h4>💡 Simple Explanation</h4>
+      <div style="background:var(--bg);border-radius:10px;padding:14px;font-size:0.88rem;line-height:1.7;color:var(--text);">
+        Your blood test shows that you have <strong>low hemoglobin</strong> (the protein that carries oxygen in blood). This may cause you to feel tired or short of breath. Your blood sugar is <strong>slightly above normal</strong> — not diabetic, but needs monitoring. Your cholesterol is a little high, which means you should reduce oily/fatty foods.
+      </div>
+    </div>
+    <div class="analysis-section">
+      <h4>⚠️ Possible Conditions (Not a Diagnosis)</h4>
+      <div style="background:#fff8e1;border-radius:10px;padding:14px;font-size:0.85rem;line-height:1.7;">
+        Based on the values, possible conditions to discuss with your doctor:<br>
+        • <strong>Iron-Deficiency Anemia</strong> (low hemoglobin)<br>
+        • <strong>Pre-Diabetes</strong> or impaired fasting glucose (high sugar)<br>
+        • <strong>Borderline Hypercholesterolemia</strong> (high cholesterol)
+      </div>
+    </div>
+    <div class="disclaimer">⚕️ <strong>Medical Disclaimer:</strong> This AI analysis is for informational purposes only. It is NOT a medical diagnosis. Always consult a licensed healthcare professional before making any health decisions.</div>
+    <button class="btn btn-outline" style="margin-top:14px;" onclick="showPage('doctors')">🩺 Find a Doctor</button>
+  </div>`;
+  const div = document.getElementById('analysis-result');
+  div.innerHTML = html;
+  div.classList.remove('hidden');
+}
+
+function renderPastReports() {
+  const div = document.getElementById('past-reports');
+  div.innerHTML = PAST_REPORTS.map(r=>`
+    <div style="background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:12px;box-shadow:var(--shadow);">
+      <span style="font-size:1.6rem;">${r.type==='pdf'?'📄':'🖼️'}</span>
+      <div style="flex:1;"><div style="font-weight:700;font-size:0.9rem;">${r.name}</div><div style="font-size:0.78rem;color:var(--muted);">${r.date}</div></div>
+      <button class="btn-sm btn-sm-primary" onclick="toast('Downloading...')">⬇️</button>
+    </div>`).join('');
+}
+
+// ─── MAP ─────────────────────────────────────────────────────────────
+function renderMapList() {
+  const div = document.getElementById('map-list');
+  div.innerHTML = NEARBY.map(p=>`
+    <div class="doctor-card" style="cursor:default;">
+      <div class="doctor-avatar">${p.emoji}</div>
+      <div class="doctor-info">
+        <div class="doctor-name">${p.name}</div>
+        <div class="doctor-spec">${p.type}</div>
+        <div class="doctor-meta"><span class="meta-badge">📍 ${p.dist}</span></div>
+        <div style="margin-top:8px;display:flex;gap:8px;">
+          <button class="btn-sm btn-sm-primary" onclick="toast('Opening directions...')">🗺️ Directions</button>
+          <button class="btn-sm btn-sm-outline" onclick="toast('Calling...')">📞 Call</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ─── EMERGENCY ───────────────────────────────────────────────────────
+function triggerSOS() {
+  const btn = document.querySelector('.sos-btn');
+  btn.style.transform = 'scale(1.1)';
+  setTimeout(()=>btn.style.transform='',200);
+  toast('🚨 SOS Alert sent! Emergency contacts notified. Calling 102...');
+  setTimeout(()=>toast('📍 Your location has been shared with emergency services.'),2000);
+}
+function callNumber(num) { toast('📞 Calling ' + num + '...'); }
+
+// ─── CHAT ────────────────────────────────────────────────────────────
+function initChat() {
+  chatHistory = [];
+  addBotMessage("👋 Hello! I'm MedCare AI. I can help you understand medical reports, explain health terms, and answer general health questions. How can I help you today?");
+}
+
+function addBotMessage(text) {
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML += `<div class="chat-bubble bubble-bot"><div class="bubble-name">MedCare AI 🤖</div>${text}</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function addUserMessage(text) {
+  const msgs = document.getElementById('chat-messages');
+  msgs.innerHTML += `<div class="chat-bubble bubble-user">${text}</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendChat() {
+  const inp = document.getElementById('chat-input');
+  const msg = inp.value.trim(); if(!msg) return;
+  addUserMessage(msg);
+  inp.value='';
+  setTimeout(()=>{
+    const key = Object.keys(CHAT_RESPONSES).find(k=>msg.toLowerCase().includes(k));
+    addBotMessage(CHAT_RESPONSES[key||'default']);
+  }, 800);
+}
+
+function quickChat(msg) {
+  showPage('chat');
+  document.getElementById('chat-input').value = msg;
+  sendChat();
+}
+
+// ─── PROFILE ─────────────────────────────────────────────────────────
+function renderProfile() {
+  const div = document.getElementById('page-profile');
+  if(currentRole==='patient'){
+    div.innerHTML = `
+      <div class="profile-hero">
+        <div class="profile-avatar-lg">${currentUser.name[0]}</div>
+        <div class="profile-name-lg">${currentUser.name}</div>
+        <div class="profile-role">🙋 Patient • MedCare Member</div>
+      </div>
+      <div class="section-card">
+        <div class="section-title" style="margin-bottom:12px;">Personal Information</div>
+        <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">${currentUser.name}</span></div>
+        <div class="info-row"><span class="info-label">Age</span><span class="info-value">${currentUser.age} years</span></div>
+        <div class="info-row"><span class="info-label">Gender</span><span class="info-value">${currentUser.gender}</span></div>
+        <div class="info-row"><span class="info-label">Email</span><span class="info-value">${currentUser.email}</span></div>
+        <div class="info-row"><span class="info-label">Blood Group</span><span class="info-value">B+</span></div>
+      </div>
+      <div class="section-card">
+        <div class="section-title" style="margin-bottom:12px;">Medical History</div>
+        <div class="info-row"><span class="info-label">Allergies</span><span class="info-value">Penicillin</span></div>
+        <div class="info-row"><span class="info-label">Conditions</span><span class="info-value">Mild Anemia</span></div>
+        <div class="info-row"><span class="info-label">Medications</span><span class="info-value">Iron Supplements</span></div>
+        <div class="info-row"><span class="info-label">Last Checkup</span><span class="info-value">2026-02-20</span></div>
+      </div>
+      <button class="btn btn-danger" onclick="logout()" style="margin-top:8px;">⏻ Logout</button>`;
+  } else if(currentRole==='doctor'){
+    div.innerHTML = `
+      <div class="profile-hero" style="background:linear-gradient(120deg,var(--accent),#00a38a)">
+        <div class="profile-avatar-lg">D</div>
+        <div class="profile-name-lg">Dr. Demo Doctor</div>
+        <div class="profile-role">👨‍⚕️ Cardiologist • 12 yrs experience</div>
+      </div>
+      <div class="section-card">
+        <div class="info-row"><span class="info-label">Specialization</span><span class="info-value">Cardiology</span></div>
+        <div class="info-row"><span class="info-label">Experience</span><span class="info-value">12 years</span></div>
+        <div class="info-row"><span class="info-label">Rating</span><span class="info-value">⭐ 4.8 (142 reviews)</span></div>
+        <div class="info-row"><span class="info-label">Clinic</span><span class="info-value">Panaji Heart Clinic</span></div>
+        <div class="info-row"><span class="info-label">Consultation Fee</span><span class="info-value">₹500</span></div>
+      </div>
+      <button class="btn btn-danger" onclick="logout()" style="margin-top:8px;">⏻ Logout</button>`;
+  }
+}
+
+// ─── ADMIN ───────────────────────────────────────────────────────────
+function renderAdmin() {
+  const div = document.getElementById('page-admin');
+  div.innerHTML = `
+    <div style="font-size:1.3rem;font-weight:800;margin-bottom:18px;">🛡️ Admin Dashboard</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num">1,240</div><div class="stat-label">Total Patients</div></div>
+      <div class="stat-card"><div class="stat-num">48</div><div class="stat-label">Registered Doctors</div></div>
+      <div class="stat-card"><div class="stat-num">320</div><div class="stat-label">Appointments Today</div></div>
+      <div class="stat-card"><div class="stat-num">15</div><div class="stat-label">Pending Approvals</div></div>
+    </div>
+    <div class="section-card">
+      <div class="section-title" style="margin-bottom:12px;">Recent Doctors</div>
+      <table class="data-table">
+        <tr><th>Name</th><th>Specialty</th><th>Status</th></tr>
+        ${DOCTORS.map(d=>`<tr><td>${d.name}</td><td>${d.spec}</td><td><span class="badge ${d.avail?'badge-active':'badge-pending'}">${d.avail?'Active':'Unavailable'}</span></td></tr>`).join('')}
+      </table>
+    </div>
+    <div class="section-card">
+      <div class="section-title" style="margin-bottom:12px;">Manage</div>
+      <button class="btn btn-primary" style="margin-bottom:8px;" onclick="toast('Feature: Add Doctor')">➕ Add Doctor</button>
+      <button class="btn btn-outline" style="margin-bottom:8px;" onclick="toast('Feature: View All Patients')">👥 View All Patients</button>
+      <button class="btn btn-outline" onclick="toast('Feature: Export Reports')">📊 Export Reports</button>
+    </div>`;
+}
+
+// ─── DOCTOR DASHBOARD ────────────────────────────────────────────────
+function renderDoctorDash() {
+  const div = document.getElementById('page-doctor-dash');
+  div.innerHTML = `
+    <div class="today-card">
+      <div style="font-size:0.9rem;opacity:0.85;margin-bottom:4px;">Today's Appointments</div>
+      <div class="today-num">8</div>
+      <div style="font-size:0.85rem;opacity:0.8;">3 completed • 5 remaining</div>
+    </div>
+    <div class="section-title">Patient Queue</div>
+    ${[
+      {num:1,name:'Rahul Verma',age:28,reason:'Chest checkup',time:'10:00 AM'},
+      {num:2,name:'Priya Singh',age:34,reason:'Follow-up',time:'10:30 AM'},
+      {num:3,name:'Kiran Pai',age:45,reason:'ECG review',time:'11:00 AM'},
+    ].map(p=>`
+      <div class="patient-queue-item">
+        <div class="queue-num">${p.num}</div>
+        <div style="flex:1;"><div style="font-weight:700;font-size:0.9rem;">${p.name}</div><div style="font-size:0.78rem;color:var(--muted);">${p.age}y • ${p.reason}</div></div>
+        <div style="text-align:right;"><div style="font-size:0.82rem;font-weight:600;color:var(--primary);">${p.time}</div><button class="btn-sm btn-sm-primary" style="margin-top:4px;" onclick="toast('Opening patient profile...')">View</button></div>
+      </div>`).join('')}
+    <div class="section-title" style="margin-top:20px;">Today's Stats</div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num">8</div><div class="stat-label">Appointments</div></div>
+      <div class="stat-card" style="border-top-color:var(--accent);"><div class="stat-num">₹3,600</div><div class="stat-label">Earnings Today</div></div>
+    </div>`;
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+
+// Auto-login with demo data for quick preview
+// (Remove this in production)
+</script>
+
+<!-- EmailJS Setup Panel -->
+<div id="setup-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(10,20,60,0.55);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(6px);">
+  <div style="background:#fff;border-radius:24px;padding:28px 24px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:1.15rem;font-weight:800;color:var(--text);">⚙️ EmailJS Setup Guide</div>
+      <button onclick="toggleSetup()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--muted);">✕</button>
+    </div>
+    <div style="background:var(--primary-light);border-radius:12px;padding:14px;margin-bottom:18px;font-size:0.85rem;color:var(--primary);font-weight:600;line-height:1.6;">
+      EmailJS lets you send emails directly from the browser — <strong>no backend server needed</strong>. It's free for up to 200 emails/month.
+    </div>
+    <div style="counter-reset:steps;">
+      <div style="margin-bottom:14px;padding:14px;background:#fafbfe;border-radius:12px;border-left:4px solid var(--primary);">
+        <div style="font-weight:800;font-size:0.9rem;margin-bottom:6px;">Step 1 — Create free account</div>
+        <div style="font-size:0.83rem;color:var(--muted);margin-bottom:8px;">Go to emailjs.com and sign up for free.</div>
+        <a href="https://www.emailjs.com" target="_blank" style="background:var(--primary);color:#fff;padding:7px 16px;border-radius:8px;font-size:0.82rem;font-weight:700;text-decoration:none;">Open EmailJS ↗</a>
+      </div>
+      <div style="margin-bottom:14px;padding:14px;background:#fafbfe;border-radius:12px;border-left:4px solid var(--accent);">
+        <div style="font-weight:800;font-size:0.9rem;margin-bottom:6px;">Step 2 — Add Email Service</div>
+        <div style="font-size:0.83rem;color:var(--muted);">Dashboard → <strong>Email Services</strong> → Add New Service → choose Gmail/Outlook → connect your email account → copy the <strong>Service ID</strong>.</div>
+      </div>
+      <div style="margin-bottom:14px;padding:14px;background:#fafbfe;border-radius:12px;border-left:4px solid var(--warning);">
+        <div style="font-weight:800;font-size:0.9rem;margin-bottom:6px;">Step 3 — Create Email Template</div>
+        <div style="font-size:0.83rem;color:var(--muted);margin-bottom:6px;">Dashboard → <strong>Email Templates</strong> → Create New. Use this template body:</div>
+        <div style="background:#1a2236;color:#a8f0e0;padding:12px;border-radius:8px;font-family:monospace;font-size:0.8rem;white-space:pre-wrap;">Subject: Your MedCare OTP Code
+
+Hello,
+
+Your OTP for MedCare login is:
+
+<strong>{{otp_code}}</strong>
+
+This code expires in 60 seconds.
+Do not share it with anyone.
+
+– MedCare Team</div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:6px;">Set <strong>To Email</strong> field as: <code style="background:#f0f0f0;padding:2px 6px;border-radius:4px;">{{to_email}}</code> — then copy the <strong>Template ID</strong>.</div>
+      </div>
+      <div style="margin-bottom:14px;padding:14px;background:#fafbfe;border-radius:12px;border-left:4px solid var(--danger);">
+        <div style="font-weight:800;font-size:0.9rem;margin-bottom:6px;">Step 4 — Get Public Key</div>
+        <div style="font-size:0.83rem;color:var(--muted);">Dashboard → <strong>Account</strong> → <strong>General</strong> → copy your <strong>Public Key</strong>.</div>
+      </div>
+      <div style="padding:14px;background:#fafbfe;border-radius:12px;border-left:4px solid #9b59b6;">
+        <div style="font-weight:800;font-size:0.9rem;margin-bottom:10px;">Step 5 — Paste Keys Below</div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Public Key</label>
+          <input type="text" id="setup-pubkey" class="form-input" placeholder="e.g. user_XXXXXXXXXXXX" style="font-size:0.85rem;">
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label class="form-label">Service ID</label>
+          <input type="text" id="setup-service" class="form-input" placeholder="e.g. service_XXXXXXX" style="font-size:0.85rem;">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">Template ID</label>
+          <input type="text" id="setup-template" class="form-input" placeholder="e.g. template_XXXXXXX" style="font-size:0.85rem;">
+        </div>
+        <button class="btn btn-primary" style="margin:0;" onclick="saveEmailJSConfig()">💾 Save & Activate</button>
+      </div>
+    </div>
+    <div id="setup-status" class="hidden" style="margin-top:14px;background:#e8f8f0;border-radius:10px;padding:12px 14px;font-size:0.85rem;font-weight:700;color:var(--success);text-align:center;">
+      ✅ EmailJS configured! Real OTPs will now be sent to user emails.
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleSetup() {
+  const ov = document.getElementById('setup-overlay');
+  ov.classList.toggle('hidden');
+  // pre-fill if already saved
+  const saved = JSON.parse(localStorage.getItem('medcare_ejs') || '{}');
+  if (saved.pub) document.getElementById('setup-pubkey').value = saved.pub;
+  if (saved.svc) document.getElementById('setup-service').value = saved.svc;
+  if (saved.tpl) document.getElementById('setup-template').value = saved.tpl;
+}
+
+function saveEmailJSConfig() {
+  const pub = document.getElementById('setup-pubkey').value.trim();
+  const svc = document.getElementById('setup-service').value.trim();
+  const tpl = document.getElementById('setup-template').value.trim();
+  if (!pub || !svc || !tpl) { alert('Please fill in all three fields.'); return; }
+  // Save to localStorage so it persists across reloads
+  localStorage.setItem('medcare_ejs', JSON.stringify({pub, svc, tpl}));
+  // Apply immediately
+  window.EMAILJS_PUBLIC_KEY  = pub;
+  window.EMAILJS_SERVICE_ID  = svc;
+  window.EMAILJS_TEMPLATE_ID = tpl;
+  emailjs.init({ publicKey: pub });
+  emailJsReady = true;
+  document.getElementById('setup-status').classList.remove('hidden');
+  setTimeout(toggleSetup, 1800);
+}
+
+// On page load, restore saved config
+(function restoreEJS() {
+  const saved = JSON.parse(localStorage.getItem('medcare_ejs') || '{}');
+  if (saved.pub && saved.svc && saved.tpl) {
+    window.EMAILJS_PUBLIC_KEY  = saved.pub;
+    window.EMAILJS_SERVICE_ID  = saved.svc;
+    window.EMAILJS_TEMPLATE_ID = saved.tpl;
+    emailjs.init({ publicKey: saved.pub });
+    emailJsReady = true;
+  }
+})();
+</script>
+</body>
+</html>
